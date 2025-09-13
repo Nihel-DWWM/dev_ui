@@ -1,16 +1,17 @@
-
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import DemandePermisForm from "./DemandePermisForm";
+import Layout from "./Layout";
 
 export default function User() {
-
   const { user, token, logout, loading } = useContext(AuthContext);
   const [documents, setDocuments] = useState([]);
   const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     if (token && user) {
@@ -19,7 +20,7 @@ export default function User() {
   }, [token, user]);
 
   const fetchDocuments = async () => {
-    console.log(token)
+    console.log(token);
     if (!token) return;
     try {
       const response = await fetch("http://localhost:3000/users/documents", {
@@ -29,7 +30,7 @@ export default function User() {
         },
       });
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       setDocuments(data);
     } catch (error) {
       console.error("Erreur récupération des demandes:", error);
@@ -38,7 +39,7 @@ export default function User() {
 
   const fetchDocument = async (formType) => {
     try {
-       const response= await fetch("http://localhost:3000/users/document", {
+      const response = await fetch("http://localhost:3000/users/document", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,10 +51,11 @@ export default function User() {
         }),
       });
 
-      const data= await response.json()
-      console.log("Réponse du backend :",data)
-       
+      const data = await response.json();
+      console.log("Réponse du backend :", data);
+
       fetchDocuments();
+      setShowForm(false);
     } catch (error) {
       console.error("Erreur lors de l'envoi de la demande :", error);
     }
@@ -69,6 +71,12 @@ export default function User() {
 
   return (
 
+    <Layout>
+    
+    <>
+
+    
+   
     <div className="max-w-5xl mx-auto p-8 space-y-8">
       <Card className="flex items-center space-x-6 p-6">
         <img
@@ -80,11 +88,66 @@ export default function User() {
           <h2 className="text-2xl font-bold">Bienvenue, {user.lname} !</h2>
           <p className="text-gray-700">Email : {user.email}</p>
           <p className="text-gray-700">Permis n° : {user.licence_id}</p>
-          <Button onClick={()=>{logout;navigate('/user');}} variant="outline">Se déconnecter</Button>
+          <Button
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            //variant="outline"
+          >
+            Se déconnecter
+          </Button>
         </div>
       </Card>
 
-      <div className="flex space-x-4 justify-center">
+      {showForm ? (
+
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto">
+              <div
+                className="relative bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4 my-12 overflow-y-auto max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold"
+                >
+                  &times;
+                </button>
+
+                <div className="p-6">
+                  <DemandePermisForm
+                    user={user}
+                    onCancel={() => setShowForm(false)}
+                    onSubmit={fetchDocument}
+                  />
+                </div>
+              </div>
+            </div>
+
+            
+
+
+        // <DemandePermisForm
+        //   user={user}
+        //   onCancel={() => setShowForm(false)}
+        //   onSubmit={fetchDocument}
+        // />
+      ) : (
+        <div className="flex space-x-4 justify-center">
+
+          <Button onClick={() => setShowForm(true)} className="bg-yellow-500 hover:bg-yellow-600">
+            Demande Permis International
+          </Button>
+          <Button onClick={() => fetchDocument("demande carte grise")}>
+            Demande Carte Grise Internationale
+          </Button>
+          <Button onClick={() => fetchDocument("demande carnet douane")}>
+            Demande Carnet de Passage en Douane
+          </Button>
+        </div>
+      )}
+
+      {/* <div className="flex space-x-4 justify-center">
         <Button onClick={() => fetchDocument("demande permis")}>
           Demande Permis International
         </Button>
@@ -94,7 +157,7 @@ export default function User() {
         <Button onClick={() => fetchDocument("demande carnet douane")}>
           Demande Carnet de Passage en Douane
         </Button>
-      </div>
+      </div> */}
 
       <Card>
         <CardContent className="p-6">
@@ -112,7 +175,9 @@ export default function User() {
                 documents.map((doc) => (
                   <tr key={doc._id}>
                     <td className="border p-2">{doc.type}</td>
-                    <td className="border p-2 capitalize">{doc.status || "en attente"}</td>
+                    <td className="border p-2 capitalize">
+                      {doc.status || "en attente"}
+                    </td>
                     <td className="border p-2">
                       {new Date(doc.created_at).toLocaleDateString()}
                     </td>
@@ -130,12 +195,17 @@ export default function User() {
         </CardContent>
       </Card>
     </div>
+
+    
+
+    </>
+     </Layout>
   )
+
 }
 
 //////deuxième solution///////////
 //     const { user, token } = useContext(AuthContext);
-    
 
 //     const fetchDocument = (form) => {
 //         fetch('http://localhost:3000/users/document', {
@@ -186,8 +256,6 @@ export default function User() {
 //                    Demande carnet de passage en douane
 //                 </button>
 
-
-
 //             </div>
 //         </>
 //     );
@@ -195,7 +263,7 @@ export default function User() {
 
 /////////////////Deuxième solution//////////////////////////
 
-    /////1ere solution//////
+/////1ere solution//////
 
 //     // Récupération des données de l'utilisateur depuis le localStorage
 //   const [user, setUser] = useState();
@@ -203,7 +271,7 @@ export default function User() {
 
 //  const fetchUser = async () => {
 
-//         const token = localStorage.getItem('token'); 
+//         const token = localStorage.getItem('token');
 //         console.log(token)
 //     try {
 //         const response = await fetch('http://localhost:3000/users/me', {
@@ -231,8 +299,7 @@ export default function User() {
 // useEffect(() => {
 
 //     fetchUser()
-    
-    
+
 // }, []);
 
 // const fetchDocument= (form)=>{
@@ -257,8 +324,6 @@ export default function User() {
 // //     fetchDocument(form)
 // //  }
 
- 
-
 //   if (!user) {
 //     return <p>Chargement...</p>;
 //   }
@@ -273,14 +338,13 @@ export default function User() {
 //       <p>Email : {user.email}</p>
 //       <p>PERMIS n° : {user.licence_id}</p>
 
-    
 //      </div>
 //      <div className="flex flex-col items-center space-y-4 mt-8">
 //     <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md" onClick={() =>
 //         fetchDocument({ userId: user._id, type: "demande permis" })}>
 //        Demande permis International
 //     </button>
-     
+
 //     <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md" onClick={() =>
 //         fetchDocument({ userId: user._id, type: "demande carte grise" })} >
 //        Demande Carte grise Internationeale
@@ -292,10 +356,7 @@ export default function User() {
 //     </button>
 
 //  </div>
-    
-    
+
 //     </>
 //   )
 // }
-
-
